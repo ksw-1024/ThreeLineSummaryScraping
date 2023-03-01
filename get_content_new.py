@@ -7,14 +7,16 @@ import time
 import csv
 
 # defined
-summary = []
-summary_number = 0
 page_start = 1
-page_end = 10
+page_end = 300
 
 print("Start scraping Livedoor News.")
 
 while page_start < page_end:
+    # reset
+    summary = []
+    summary_number = 0
+
     url = 'https://news.livedoor.com/topics/category/main/?p=' + str(page_start)
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/110.0"
@@ -46,24 +48,35 @@ while page_start < page_end:
             article = ""
 
             lineList = article_soup.select('.articleBody p')
-            for line in lineList:
-                if len(line.contents) > 0 and type(line.contents[0]) == NavigableString:
-                    article += line.contents[0].strip()
-            print("INDEX: " + article)
+            print(lineList)
 
-            li_list = []
-            for li in find_summary.find_all("li"):
-                li_list.append(li.text)
-            summary.append(li_list)
-            summary[summary_number].append(article)
+            if len(lineList) != 0:
+                for line in lineList:
+                    if len(line.contents) > 0 and type(line.contents[0]) == NavigableString:
+                        article += line.contents[0].strip()
+                print("INDEX: " + article)
 
-            summary_number += 1
+                li_list = []
+                for li in find_summary.find_all("li"):
+                    li_list.append(li.text)
+                summary.append(li_list)
+                summary[summary_number].append(article)
+
+                summary_number += 1
+            else:
+                print("There are no articles on this page.")
         else:
             print("No summary minutes were found on this page.")
 
-    with open('output.csv', 'w') as file:
-        writer = csv.writer(file, lineterminator='\n')
-        writer.writerows(summary)
-        print("Successful output.")
+    if page_start == 1:
+        with open('output.csv', 'w') as file:
+            writer = csv.writer(file, lineterminator='\n')
+            writer.writerows(summary)
+            print("Successful output.")
+    else:
+        with open('output.csv', 'a') as file:
+            writer = csv.writer(file, lineterminator='\n')
+            writer.writerows(summary)
+            print("Successful output.")
 
     page_start = page_start + 1
